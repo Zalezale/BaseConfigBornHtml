@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		<script type="text/javascript" src="js/jquery-2.1.0.js"></script>
+		<script type="text/javascript" src="js/server.js"></script>
+		<style>
+			div {
+				position: absolute;
+				top: 40%;
+				left: 40%;
+				text-align: center;
+			}
+		</style>
+	</head>
+
+	<body>
+		<div>
+			<progress id="haveDone" value="0" max="100"></progress>
+			<br />
+			<input type="file" id="files" style="display:none" onchange="importTxt()" />
+			<input type="button" id="import1" value="导入配置文件" />
+			<input type="button" id="export" value="导出最终html" />
+		</div>
+		<script>
+			var temp = ['<!DOCTYPE html><html><head><meta charset="UTF-8"><title></title></head><body>', '', '</body></html>'];
+			var contentOfRead;
+			$("#import1").click(function() { //点击导入按钮，使files触发点击事件，然后完成读取文件的操作。
+				$("#files").click();
+			});
+			$("#export").click(function() {
+				var content = JSON.parse(contentOfRead);
+				var htmlContent = bornHtml(content);
+				var blob = new Blob([htmlContent], {
+					type: "text/plain;charset=utf-8"
+				});
+				saveAs(blob, "file.html");
+			})
+
+			function importTxt() {
+				var selectedFile = document.getElementById("files").files[0]; //获取读取的File对象
+				var name = selectedFile.name; //读取选中文件的文件名
+				var size = selectedFile.size; //读取选中文件的大小
+				console.log("文件名:" + name + "大小：" + size);
+
+				var reader = new FileReader(); //这里是核心！！！读取操作就是由它完成的。
+				reader.readAsText(selectedFile, 'gb2312'); //读取文件的内容
+
+				reader.onload = function() {
+					var Done = document.getElementById("haveDone");
+					Done.setAttribute('value', 100);
+					contentOfRead = this.result; //当读取完成之后会回调这个函数，然后此时文件的内容存储到了result中。直接操作即可。
+				};
+			}
+
+			function bornHtml(content) {
+				var strContent = '';
+				var widgets = Object.keys(content);
+				widgets.forEach(function(value, index) {
+					switch(value) {
+						case 'inputText':
+							for(var i = 0; i < content[value]; i++) {
+								strContent += '<input type="text"/>'
+							}
+							break;
+						case 'inputBotton':
+							for(var i = 0; i < content[value]; i++) {
+								strContent += '<input type="button" value="确认"/>'
+							}
+							break;
+						case 'label':
+							for(var i = 0; i < content[value]; i++) {
+								strContent += '<label>你好</label>'
+							}
+							break;
+					}
+				})
+				temp[1] = strContent;
+				return temp.join('');
+			}
+		</script>
+	</body>
+
+</html>
